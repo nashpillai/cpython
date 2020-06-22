@@ -417,7 +417,7 @@ Expressions
 
 .. class:: BoolOp(op, values)
 
-   A boolean operation, 'or' or 'and'. ``op`` is :class:`Or` or :class:`And`.
+   A boolean operation, 'or', 'nor', or 'and'. ``op`` is :class:`Or`, :class`Nor`, or :class:`And`.
    ``values`` are the values involved. Consecutive operations with the same
    operator, such as ``a or b or c``, are collapsed into one node with several
    values.
@@ -437,6 +437,7 @@ Expressions
 
 .. class:: And
            Or
+           Nor
 
    Boolean operator tokens.
 

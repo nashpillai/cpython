@@ -3650,6 +3650,9 @@ compiler_boolop(struct compiler *c, expr_ty e)
     }
     VISIT(c, expr, (expr_ty)asdl_seq_GET(s, n));
     compiler_use_next_block(c, end);
+    if (e->v.BoolOp.op == Nor)
+        ADDOP(c, UNARY_NOT)
+    compiler_use_next_block(c, compiler_new_block(c));
     return 1;
 }
 

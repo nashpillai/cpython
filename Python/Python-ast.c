@@ -95,6 +95,8 @@ typedef struct {
     PyObject *Name_type;
     PyObject *NamedExpr_type;
     PyObject *Nonlocal_type;
+    PyObject *Nor_singleton;
+    PyObject *Nor_type;
     PyObject *NotEq_singleton;
     PyObject *NotEq_type;
     PyObject *NotIn_singleton;
@@ -315,6 +317,8 @@ static int astmodule_clear(PyObject *module)
     Py_CLEAR(astmodulestate(module)->Name_type);
     Py_CLEAR(astmodulestate(module)->NamedExpr_type);
     Py_CLEAR(astmodulestate(module)->Nonlocal_type);
+    Py_CLEAR(astmodulestate(module)->Nor_singleton);
+    Py_CLEAR(astmodulestate(module)->Nor_type);
     Py_CLEAR(astmodulestate(module)->NotEq_singleton);
     Py_CLEAR(astmodulestate(module)->NotEq_type);
     Py_CLEAR(astmodulestate(module)->NotIn_singleton);
@@ -534,6 +538,8 @@ static int astmodule_traverse(PyObject *module, visitproc visit, void* arg)
     Py_VISIT(astmodulestate(module)->Name_type);
     Py_VISIT(astmodulestate(module)->NamedExpr_type);
     Py_VISIT(astmodulestate(module)->Nonlocal_type);
+    Py_VISIT(astmodulestate(module)->Nor_singleton);
+    Py_VISIT(astmodulestate(module)->Nor_type);
     Py_VISIT(astmodulestate(module)->NotEq_singleton);
     Py_VISIT(astmodulestate(module)->NotEq_type);
     Py_VISIT(astmodulestate(module)->NotIn_singleton);
@@ -1764,7 +1770,7 @@ static int init_types(void)
                                              NULL, NULL);
     if (!state->Del_singleton) return 0;
     state->boolop_type = make_type("boolop", state->AST_type, NULL, 0,
-        "boolop = And | Or");
+        "boolop = And | Or | Nor");
     if (!state->boolop_type) return 0;
     if (!add_attributes(state->boolop_type, NULL, 0)) return 0;
     state->And_type = make_type("And", state->boolop_type, NULL, 0,
@@ -1779,6 +1785,12 @@ static int init_types(void)
     state->Or_singleton = PyType_GenericNew((PyTypeObject *)state->Or_type,
                                             NULL, NULL);
     if (!state->Or_singleton) return 0;
+    state->Nor_type = make_type("Nor", state->boolop_type, NULL, 0,
+        "Nor");
+    if (!state->Nor_type) return 0;
+    state->Nor_singleton = PyType_GenericNew((PyTypeObject *)state->Nor_type,
+                                             NULL, NULL);
+    if (!state->Nor_singleton) return 0;
     state->operator_type = make_type("operator", state->AST_type, NULL, 0,
         "operator = Add | Sub | Mult | MatMult | Div | Mod | Pow | LShift | RShift | BitOr | BitXor | BitAnd | FloorDiv");
     if (!state->operator_type) return 0;
@@ -4634,6 +4646,9 @@ PyObject* ast2obj_boolop(boolop_ty o)
         case Or:
             Py_INCREF(astmodulestate_global->Or_singleton);
             return astmodulestate_global->Or_singleton;
+        case Nor:
+            Py_INCREF(astmodulestate_global->Nor_singleton);
+            return astmodulestate_global->Nor_singleton;
     }
     Py_UNREACHABLE();
 }
@@ -8843,6 +8858,14 @@ obj2ast_boolop(PyObject* obj, boolop_ty* out, PyArena* arena)
         *out = Or;
         return 0;
     }
+    isinstance = PyObject_IsInstance(obj, astmodulestate_global->Nor_type);
+    if (isinstance == -1) {
+        return 1;
+    }
+    if (isinstance) {
+        *out = Nor;
+        return 0;
+    }
 
     PyErr_Format(PyExc_TypeError, "expected some sort of boolop, but got %R", obj);
     return 1;
@@ -10228,6 +10251,10 @@ PyInit__ast(void)
         goto error;
     }
     Py_INCREF(astmodulestate(m)->Or_type);
+    if (PyModule_AddObject(m, "Nor", astmodulestate_global->Nor_type) < 0) {
+        goto error;
+    }
+    Py_INCREF(astmodulestate(m)->Nor_type);
     if (PyModule_AddObject(m, "operator", astmodulestate_global->operator_type)
         < 0) {
         goto error;

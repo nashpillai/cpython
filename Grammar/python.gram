@@ -382,8 +382,14 @@ lambda_param_maybe_default[NameDefaultPair*]:
 lambda_param[arg_ty]: a=NAME { _Py_arg(a->v.Name.id, NULL, NULL, EXTRA) }
 
 disjunction[expr_ty] (memo):
-    | a=conjunction b=('or' c=conjunction { c })+ { _Py_BoolOp(
+    | a=inverse_disjunction b=('or' c=inverse_disjunction { c })+ { _Py_BoolOp(
         Or,
+        CHECK(_PyPegen_seq_insert_in_front(p, a, b)),
+        EXTRA) }
+    | inverse_disjunction
+inverse_disjunction[expr_ty] (memo):
+    | a=conjunction b=('nor' c=conjunction { c })+ { _Py_BoolOp(
+        Nor,
         CHECK(_PyPegen_seq_insert_in_front(p, a, b)),
         EXTRA) }
     | conjunction
