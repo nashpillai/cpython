@@ -394,8 +394,14 @@ inverse_disjunction[expr_ty] (memo):
         EXTRA) }
     | conjunction
 conjunction[expr_ty] (memo):
-    | a=inversion b=('and' c=inversion { c })+ { _Py_BoolOp(
+    | a=inverse_conjunction b=('and' c=inverse_conjunction { c })+ { _Py_BoolOp(
         And,
+        CHECK(_PyPegen_seq_insert_in_front(p, a, b)),
+        EXTRA) }
+    | inverse_conjunction
+inverse_conjunction[expr_ty] (memo):
+    | a=inversion b=('nand' c=inversion { c })+ { _Py_BoolOp(
+        Nand,
         CHECK(_PyPegen_seq_insert_in_front(p, a, b)),
         EXTRA) }
     | inversion

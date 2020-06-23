@@ -1599,6 +1599,8 @@ truth value. [#]_
 .. _booleans:
 .. _and:
 .. _or:
+.. _nor:
+.. _nand:
 .. _not:
 
 Boolean operations
@@ -1609,8 +1611,10 @@ Boolean operations
    pair: Boolean; operation
 
 .. productionlist::
-   or_test: `and_test` | `or_test` "or" `and_test`
-   and_test: `not_test` | `and_test` "and" `not_test`
+   or_test: `nor_test` | `or_test` "or" `nor_test`
+   nor_test: `and_test` | `nor_test` "nor" `and_test`
+   and_test: `nand_test` | `and_test` "and" `nand_test`
+   nand_test: `not_test` | `nand_test` "nand" `not_test`
    not_test: `comparison` | "not" `not_test`
 
 In the context of Boolean operations, and also when expressions are used by
@@ -1630,10 +1634,22 @@ otherwise.
 The expression ``x and y`` first evaluates *x*; if *x* is false, its value is
 returned; otherwise, *y* is evaluated and the resulting value is returned.
 
+.. index:: operator: nand
+
+The expression ``x nand y`` first evaluates *x*; if *x* is true, its value is
+returned; otherwise, *y* is evaluated and the resulting value is inverted,
+and then returned.
+
 .. index:: operator: or
 
 The expression ``x or y`` first evaluates *x*; if *x* is true, its value is
 returned; otherwise, *y* is evaluated and the resulting value is returned.
+
+.. index:: operator: nor
+
+The expression ``x nor y`` first evaluates *x*; if *x* is false, false is
+returned; otherwise, *y* is evaluated and the resulting value is inverted,
+and then returned.
 
 Note that neither :keyword:`and` nor :keyword:`or` restrict the value and type
 they return to ``False`` and ``True``, but rather return the last evaluated
@@ -1805,7 +1821,11 @@ precedence and have a left-to-right chaining feature as described in the
 +-----------------------------------------------+-------------------------------------+
 | :keyword:`or`                                 | Boolean OR                          |
 +-----------------------------------------------+-------------------------------------+
+| :keyword:`nor`                                | Boolean NOR                         |
++-----------------------------------------------+-------------------------------------+
 | :keyword:`and`                                | Boolean AND                         |
++-----------------------------------------------+-------------------------------------+
+| :keyword:`nand`                               | Boolean NAND                        |
 +-----------------------------------------------+-------------------------------------+
 | :keyword:`not` ``x``                          | Boolean NOT                         |
 +-----------------------------------------------+-------------------------------------+

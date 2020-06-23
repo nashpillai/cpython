@@ -41,6 +41,7 @@ kwlist = [
     'in',
     'is',
     'lambda',
+    'nand',
     'nonlocal',
     'nor',
     'not',
