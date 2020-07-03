@@ -1601,6 +1601,8 @@ truth value. [#]_
 .. _or:
 .. _nor:
 .. _nand:
+.. _xor:
+.. _xnor:
 .. _not:
 
 Boolean operations
@@ -1614,7 +1616,9 @@ Boolean operations
    or_test: `nor_test` | `or_test` "or" `nor_test`
    nor_test: `and_test` | `nor_test` "nor" `and_test`
    and_test: `nand_test` | `and_test` "and" `nand_test`
-   nand_test: `not_test` | `nand_test` "nand" `not_test`
+   nand_test: `xor_test` | `nand_test` "nand" `xor_test`
+   xor_test: `xnor_test` | `xor_test` "xor" `xnor_test`
+   xnor_test: `not_test` | `xnor_test` "xnor" `not_test`
    not_test: `comparison` | "not" `not_test`
 
 In the context of Boolean operations, and also when expressions are used by

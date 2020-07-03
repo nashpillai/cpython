@@ -133,6 +133,10 @@ typedef struct {
     PyObject *UnaryOp_type;
     PyObject *While_type;
     PyObject *With_type;
+    PyObject *Xnor_singleton;
+    PyObject *Xnor_type;
+    PyObject *Xor_singleton;
+    PyObject *Xor_type;
     PyObject *YieldFrom_type;
     PyObject *Yield_type;
     PyObject *__dict__;
@@ -357,6 +361,10 @@ static int astmodule_clear(PyObject *module)
     Py_CLEAR(astmodulestate(module)->UnaryOp_type);
     Py_CLEAR(astmodulestate(module)->While_type);
     Py_CLEAR(astmodulestate(module)->With_type);
+    Py_CLEAR(astmodulestate(module)->Xnor_singleton);
+    Py_CLEAR(astmodulestate(module)->Xnor_type);
+    Py_CLEAR(astmodulestate(module)->Xor_singleton);
+    Py_CLEAR(astmodulestate(module)->Xor_type);
     Py_CLEAR(astmodulestate(module)->YieldFrom_type);
     Py_CLEAR(astmodulestate(module)->Yield_type);
     Py_CLEAR(astmodulestate(module)->__dict__);
@@ -580,6 +588,10 @@ static int astmodule_traverse(PyObject *module, visitproc visit, void* arg)
     Py_VISIT(astmodulestate(module)->UnaryOp_type);
     Py_VISIT(astmodulestate(module)->While_type);
     Py_VISIT(astmodulestate(module)->With_type);
+    Py_VISIT(astmodulestate(module)->Xnor_singleton);
+    Py_VISIT(astmodulestate(module)->Xnor_type);
+    Py_VISIT(astmodulestate(module)->Xor_singleton);
+    Py_VISIT(astmodulestate(module)->Xor_type);
     Py_VISIT(astmodulestate(module)->YieldFrom_type);
     Py_VISIT(astmodulestate(module)->Yield_type);
     Py_VISIT(astmodulestate(module)->__dict__);
@@ -1776,7 +1788,7 @@ static int init_types(void)
                                              NULL, NULL);
     if (!state->Del_singleton) return 0;
     state->boolop_type = make_type("boolop", state->AST_type, NULL, 0,
-        "boolop = And | Or | Nor | Nand");
+        "boolop = And | Or | Xor | Nor | Nand | Xnor");
     if (!state->boolop_type) return 0;
     if (!add_attributes(state->boolop_type, NULL, 0)) return 0;
     state->And_type = make_type("And", state->boolop_type, NULL, 0,
@@ -1791,6 +1803,12 @@ static int init_types(void)
     state->Or_singleton = PyType_GenericNew((PyTypeObject *)state->Or_type,
                                             NULL, NULL);
     if (!state->Or_singleton) return 0;
+    state->Xor_type = make_type("Xor", state->boolop_type, NULL, 0,
+        "Xor");
+    if (!state->Xor_type) return 0;
+    state->Xor_singleton = PyType_GenericNew((PyTypeObject *)state->Xor_type,
+                                             NULL, NULL);
+    if (!state->Xor_singleton) return 0;
     state->Nor_type = make_type("Nor", state->boolop_type, NULL, 0,
         "Nor");
     if (!state->Nor_type) return 0;
@@ -1803,6 +1821,12 @@ static int init_types(void)
     state->Nand_singleton = PyType_GenericNew((PyTypeObject *)state->Nand_type,
                                               NULL, NULL);
     if (!state->Nand_singleton) return 0;
+    state->Xnor_type = make_type("Xnor", state->boolop_type, NULL, 0,
+        "Xnor");
+    if (!state->Xnor_type) return 0;
+    state->Xnor_singleton = PyType_GenericNew((PyTypeObject *)state->Xnor_type,
+                                              NULL, NULL);
+    if (!state->Xnor_singleton) return 0;
     state->operator_type = make_type("operator", state->AST_type, NULL, 0,
         "operator = Add | Sub | Mult | MatMult | Div | Mod | Pow | LShift | RShift | BitOr | BitXor | BitAnd | FloorDiv");
     if (!state->operator_type) return 0;
@@ -4658,12 +4682,18 @@ PyObject* ast2obj_boolop(boolop_ty o)
         case Or:
             Py_INCREF(astmodulestate_global->Or_singleton);
             return astmodulestate_global->Or_singleton;
+        case Xor:
+            Py_INCREF(astmodulestate_global->Xor_singleton);
+            return astmodulestate_global->Xor_singleton;
         case Nor:
             Py_INCREF(astmodulestate_global->Nor_singleton);
             return astmodulestate_global->Nor_singleton;
         case Nand:
             Py_INCREF(astmodulestate_global->Nand_singleton);
             return astmodulestate_global->Nand_singleton;
+        case Xnor:
+            Py_INCREF(astmodulestate_global->Xnor_singleton);
+            return astmodulestate_global->Xnor_singleton;
     }
     Py_UNREACHABLE();
 }
@@ -8873,6 +8903,14 @@ obj2ast_boolop(PyObject* obj, boolop_ty* out, PyArena* arena)
         *out = Or;
         return 0;
     }
+    isinstance = PyObject_IsInstance(obj, astmodulestate_global->Xor_type);
+    if (isinstance == -1) {
+        return 1;
+    }
+    if (isinstance) {
+        *out = Xor;
+        return 0;
+    }
     isinstance = PyObject_IsInstance(obj, astmodulestate_global->Nor_type);
     if (isinstance == -1) {
         return 1;
@@ -8887,6 +8925,14 @@ obj2ast_boolop(PyObject* obj, boolop_ty* out, PyArena* arena)
     }
     if (isinstance) {
         *out = Nand;
+        return 0;
+    }
+    isinstance = PyObject_IsInstance(obj, astmodulestate_global->Xnor_type);
+    if (isinstance == -1) {
+        return 1;
+    }
+    if (isinstance) {
+        *out = Xnor;
         return 0;
     }
 
@@ -10274,6 +10320,10 @@ PyInit__ast(void)
         goto error;
     }
     Py_INCREF(astmodulestate(m)->Or_type);
+    if (PyModule_AddObject(m, "Xor", astmodulestate_global->Xor_type) < 0) {
+        goto error;
+    }
+    Py_INCREF(astmodulestate(m)->Xor_type);
     if (PyModule_AddObject(m, "Nor", astmodulestate_global->Nor_type) < 0) {
         goto error;
     }
@@ -10282,6 +10332,10 @@ PyInit__ast(void)
         goto error;
     }
     Py_INCREF(astmodulestate(m)->Nand_type);
+    if (PyModule_AddObject(m, "Xnor", astmodulestate_global->Xnor_type) < 0) {
+        goto error;
+    }
+    Py_INCREF(astmodulestate(m)->Xnor_type);
     if (PyModule_AddObject(m, "operator", astmodulestate_global->operator_type)
         < 0) {
         goto error;

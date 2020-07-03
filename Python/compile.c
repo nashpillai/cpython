@@ -934,6 +934,9 @@ stack_effect(int opcode, int oparg, int jump)
         case INPLACE_OR:
             return -1;
 
+        case LOGICAL_XOR:
+            return -1;
+
         case SETUP_WITH:
             /* 1 in the normal flow.
              * Restore the stack position and push 6 values before jumping to
@@ -3634,23 +3637,32 @@ compiler_boolop(struct compiler *c, expr_ty e)
     asdl_seq *s;
 
     assert(e->kind == BoolOp_kind);
-    if (e->v.BoolOp.op == And || e->v.BoolOp.op == Nand)
-        jumpi = JUMP_IF_FALSE_OR_POP;
-    else
-        jumpi = JUMP_IF_TRUE_OR_POP;
     end = compiler_new_block(c);
     if (end == NULL)
         return 0;
     s = e->v.BoolOp.values;
     n = asdl_seq_LEN(s) - 1;
     assert(n >= 0);
-    for (i = 0; i < n; ++i) {
-        VISIT(c, expr, (expr_ty)asdl_seq_GET(s, i));
-        ADDOP_JABS(c, jumpi, end);
+    if (e->v.BoolOp.op == Xor || e->v.BoolOp.op == Xnor) {
+        VISIT(c, expr, (expr_ty)asdl_seq_GET(s, 0));
+        for (i = 1; i <= n; ++i) {
+            VISIT(c, expr, (expr_ty)asdl_seq_GET(s, i));
+            ADDOP(c, LOGICAL_XOR)
+        }
     }
-    VISIT(c, expr, (expr_ty)asdl_seq_GET(s, n));
+    else {
+        if (e->v.BoolOp.op == And || e->v.BoolOp.op == Nand)
+            jumpi = JUMP_IF_FALSE_OR_POP;
+        else
+            jumpi = JUMP_IF_TRUE_OR_POP;
+        for (i = 0; i < n; ++i) {
+            VISIT(c, expr, (expr_ty)asdl_seq_GET(s, i));
+            ADDOP_JABS(c, jumpi, end);
+        }
+        VISIT(c, expr, (expr_ty)asdl_seq_GET(s, n));
+    }
     compiler_use_next_block(c, end);
-    if (e->v.BoolOp.op == Nor || e->v.BoolOp.op == Nand)
+    if (e->v.BoolOp.op == Nor || e->v.BoolOp.op == Nand || e->v.BoolOp.op == Xnor)
         ADDOP(c, UNARY_NOT)
     compiler_use_next_block(c, compiler_new_block(c));
     return 1;

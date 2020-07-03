@@ -1484,7 +1484,7 @@ main_loop:
         }
 #endif
 
-        switch (opcode) {
+        switch (opcode) { // Bookmark
 
         /* BEWARE!
            It is essential that any operation that fails must goto error
@@ -1811,6 +1811,30 @@ main_loop:
             SET_TOP(res);
             if (res == NULL)
                 goto error;
+            DISPATCH();
+        }
+
+        case TARGET(LOGICAL_XOR): {
+            PyObject *right = POP();
+            PyObject *left = TOP();
+            int right_bool = PyObject_IsTrue(right);
+            int left_bool = PyObject_IsTrue(left);
+            Py_DECREF(left);
+            Py_DECREF(right);
+
+            if (left_bool == 0) {
+                if (right_bool == 0)
+                    SET_TOP(Py_False);
+                else
+                    SET_TOP(Py_True);
+            }
+            else {
+                if (right_bool == 0)
+                    SET_TOP(Py_True);
+                else
+                    SET_TOP(Py_False);
+            }
+
             DISPATCH();
         }
 

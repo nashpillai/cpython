@@ -135,7 +135,9 @@ lambdef_nocond: 'lambda' [varargslist] ':' test_nocond
 or_test: nor_test ('or' nor_test)*
 nor_test: and_test ('nor' and_test)*
 and_test: nand_test ('and' nand_test)*
-nand_test: not_test ('nand' not_test)*
+nand_test: xor_test ('nand' xor_test)*
+xor_test: xnor_test ('xor' xnor_test)*
+xnor_test: not_test ('xnor' not_test)*
 not_test: 'not' not_test | comparison
 comparison: expr (comp_op expr)*
 # <> isn't actually a valid comparison operator in Python. It's here for the

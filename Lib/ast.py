@@ -628,7 +628,9 @@ class _Precedence(IntEnum):
     OR = auto()              # 'or'
     NOR = auto()             # 'nor'
     AND = auto()             # 'and'
-    NAND = auto()             # 'nand'
+    NAND = auto()            # 'nand'
+    XOR = auto()             # 'xor'
+    XNOR = auto()            # 'xnor'
     NOT = auto()             # 'not'
     CMP = auto()             # '<', '>', '==', '>=', '<=', '!=',
                              # 'in', 'not in', 'is', 'is not'
@@ -1318,8 +1320,9 @@ class _Unparser(NodeVisitor):
                 self.write(" " + self.cmpops[o.__class__.__name__] + " ")
                 self.traverse(e)
 
-    boolops = {"And": "and", "Or": "or", "Nor": "nor", "Nand": "nand"}
-    boolop_precedence = {"and": _Precedence.AND, "or": _Precedence.OR, "nor": _Precedence.NOR, "nand": _Precedence.NAND}
+    boolops = {"And": "and", "Or": "or", "Xor": "xor", "Nor": "nor", "Nand": "nand", "Xnor": "xnor"}
+    boolop_precedence = {"and": _Precedence.AND, "or": _Precedence.OR, "xor": _Precedence.XOR,
+                        "nor": _Precedence.NOR, "nand": _Precedence.NAND, "xnor": _Precedence.XNOR}
 
     def visit_BoolOp(self, node):
         operator = self.boolops[node.op.__class__.__name__]

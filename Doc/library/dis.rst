@@ -483,6 +483,17 @@ result back on the stack.
    Implements ``TOS = TOS1 | TOS``.
 
 
+**Logical operations**
+
+Logical operations remove the top of the stack (TOS) and the second top-most
+stack item (TOS1) from the stack.  They perform the operation, and put the
+result back on the stack.
+
+.. opcode:: LOGICAL_XOR
+
+   Implements ``TOS = TOS1 xor TOS``
+
+
 **In-place operations**
 
 In-place operations are like binary operations, in that they remove TOS and

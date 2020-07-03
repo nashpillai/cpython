@@ -83,6 +83,8 @@ def_op('BINARY_TRUE_DIVIDE', 27)
 def_op('INPLACE_FLOOR_DIVIDE', 28)
 def_op('INPLACE_TRUE_DIVIDE', 29)
 
+def_op('LOGICAL_XOR', 35)
+
 def_op('RERAISE', 48)
 def_op('WITH_EXCEPT_START', 49)
 def_op('GET_AITER', 50)

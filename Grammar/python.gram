@@ -400,8 +400,20 @@ conjunction[expr_ty] (memo):
         EXTRA) }
     | inverse_conjunction
 inverse_conjunction[expr_ty] (memo):
-    | a=inversion b=('nand' c=inversion { c })+ { _Py_BoolOp(
+    | a=exclusive_disjunction b=('nand' c=exclusive_disjunction { c })+ { _Py_BoolOp(
         Nand,
+        CHECK(_PyPegen_seq_insert_in_front(p, a, b)),
+        EXTRA) }
+    | exclusive_disjunction
+exclusive_disjunction[expr_ty] (memo):
+    | a=inverse_exclusive_disjunction b=('xor' c=inverse_exclusive_disjunction { c })+ { _Py_BoolOp(
+        Xor,
+        CHECK(_PyPegen_seq_insert_in_front(p, a, b)),
+        EXTRA) }
+    | inverse_exclusive_disjunction
+inverse_exclusive_disjunction[expr_ty] (memo):
+    | a=inversion b=('xnor' c=inversion { c })+ { _Py_BoolOp(
+        Xnor,
         CHECK(_PyPegen_seq_insert_in_front(p, a, b)),
         EXTRA) }
     | inversion
